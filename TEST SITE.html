@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site dynamique test</title>
+</head>
+<body>
+  <h1>Bienvenue sur mon site !</h1>
+  <p id="texte">Ceci est un texte modifiable 🔥</p>
+
+  <textarea id="editeur" placeholder="Écris ici pour modifier..."></textarea>
+  <button id="sauver">💾 Sauvegarder</button>
+
+  <script type="module">
+    // --- Import des modules Firebase ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    // --- Configuration Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMVF7wmr-2H-UTF-13cR4KlSlrkqa55vc",
+      authDomain: "therhyno-f06e1.firebaseapp.com",
+      databaseURL: "https://therhyno-f06e1-default-rtdb.firebaseio.com",  // 🔥 AJOUTE CETTE LIGNE
+      projectId: "therhyno-f06e1",
+      storageBucket: "therhyno-f06e1.firebasestorage.app",
+      messagingSenderId: "596190065869",
+      appId: "1:596190065869:web:4d1c4d2f28e29017d36584",
+      measurementId: "G-6YHL93M2E1"
+    };
+
+    // --- Initialisation Firebase ---
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const texteRef = ref(db, "texte");
+
+    // --- Affichage en temps réel ---
+    onValue(texteRef, (snapshot) => {
+      const data = snapshot.val();
+      document.getElementById("texte").textContent = data || "Rien pour l’instant...";
+    });
+
+    // --- Sauvegarde du texte ---
+    document.getElementById("sauver").addEventListener("click", () => {
+      const newText = document.getElementById("editeur").value;
+      set(texteRef, newText);
+      document.getElementById("editeur").value = "";
+    });
+  </script>
+</body>
+</html>
