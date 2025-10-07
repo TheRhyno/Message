@@ -1,51 +1,111 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Site dynamique test</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discussion en temps réel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #chat {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .message {
+      background: #fff;
+      padding: 8px 12px;
+      margin: 5px 0;
+      border-radius: 10px;
+      max-width: 70%;
+    }
+    .message.me {
+      background: #dcf8c6;
+      margin-left: auto;
+    }
+    #inputArea {
+      display: flex;
+      padding: 10px;
+      background: #eee;
+    }
+    #messageInput {
+      flex: 1;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #sendBtn {
+      padding: 10px 15px;
+      margin-left: 10px;
+      border: none;
+      background: #0084ff;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h1>Bienvenue sur mon site !</h1>
-  <p id="texte">Ceci est un texte modifiable 🔥</p>
 
-  <textarea id="editeur" placeholder="Écris ici pour modifier..."></textarea>
-  <button id="sauver">💾 Sauvegarder</button>
+<div id="chat"></div>
 
-  <script type="module">
-    // --- Import des modules Firebase ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<div id="inputArea">
+  <input type="text" id="messageInput" placeholder="Écris un message..." />
+  <button id="sendBtn">Envoyer</button>
+</div>
 
-    // --- Configuration Firebase ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMVF7wmr-2H-UTF-13cR4KlSlrkqa55vc",
-      authDomain: "therhyno-f06e1.firebaseapp.com",
-      databaseURL: "https://therhyno-f06e1-default-rtdb.firebaseio.com",  // 🔥 AJOUTE CETTE LIGNE
-      projectId: "therhyno-f06e1",
-      storageBucket: "therhyno-f06e1.firebasestorage.app",
-      messagingSenderId: "596190065869",
-      appId: "1:596190065869:web:4d1c4d2f28e29017d36584",
-      measurementId: "G-6YHL93M2E1"
-    };
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    // --- Initialisation Firebase ---
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const texteRef = ref(db, "texte");
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMVF7wmr-2H-UTF-13cR4KlSlrkqa55vc",
+    authDomain: "therhyno-f06e1.firebaseapp.com",
+    databaseURL: "https://therhyno-f06e1-default-rtdb.firebaseio.com",
+    projectId: "therhyno-f06e1",
+    storageBucket: "therhyno-f06e1.appspot.com",
+    messagingSenderId: "596190065869",
+    appId: "1:596190065869:web:4d1c4d2f28e29017d36584",
+    measurementId: "G-6YHL93M2E1"
+  };
 
-    // --- Affichage en temps réel ---
-    onValue(texteRef, (snapshot) => {
-      const data = snapshot.val();
-      document.getElementById("texte").textContent = data || "Rien pour l’instant...";
-    });
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const messagesRef = ref(db, "messages");
 
-    // --- Sauvegarde du texte ---
-    document.getElementById("sauver").addEventListener("click", () => {
-      const newText = document.getElementById("editeur").value;
-      set(texteRef, newText);
-      document.getElementById("editeur").value = "";
-    });
-  </script>
+  const chatDiv = document.getElementById("chat");
+  const input = document.getElementById("messageInput");
+  const sendBtn = document.getElementById("sendBtn");
+
+  // Afficher les messages en temps réel
+  onChildAdded(messagesRef, (snapshot) => {
+    const msg = snapshot.val();
+    const div = document.createElement("div");
+    div.textContent = msg.text;
+    div.classList.add("message");
+    if(msg.me) div.classList.add("me");
+    chatDiv.appendChild(div);
+    chatDiv.scrollTop = chatDiv.scrollHeight; // scroller automatiquement
+  });
+
+  // Envoyer un message
+  sendBtn.addEventListener("click", () => {
+    if(input.value.trim() === "") return;
+    push(messagesRef, { text: input.value, me: true });
+    input.value = "";
+  });
+
+  // Envoyer avec Entrée
+  input.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") sendBtn.click();
+  });
+</script>
+
 </body>
 </html>
